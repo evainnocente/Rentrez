@@ -1,0 +1,96 @@
+---
+title: "Analysis"
+author: "Eva Burguete-Innocente"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+[Link to my github](https://github.com/evainnocente/Rentrez)
+
+Part I
+
+Analysis.Rmd
+
+Import the sequences.csv
+
+```{r}
+analysis<-read.csv("Sequences.csv")
+
+```
+
+Counting the number of each nucleotide in each sequence and printing it as a table.
+```{r}
+
+library(dplyr)
+
+df<-analysis%>%
+  group_by(Name)%>%
+  mutate(C=nchar(Sequence)-nchar(gsub("C","",Sequence)),A=nchar(Sequence)-nchar(gsub("A","",Sequence)), 
+T=nchar(Sequence)-nchar(gsub("T","",Sequence)),
+G=nchar(Sequence)-nchar(gsub("G","",Sequence)))
+
+df   
+
+```
+
+Print out each sequence.
+
+```{r}
+analysis$Sequence  
+```
+
+Calculating % GC and creating a table
+```{r}
+
+GC<-df%>%
+  mutate(GCcontent=nchar(gsub("C|G","",Sequence))/nchar(Sequence)*100)%>%
+  rename(SequenceID=Name)%>%
+  select(SequenceID,GCcontent)
+
+GC
+```
+
+An image of a bacteria from the internet, and link to Wikipedia page about _Borrelia burgdorferi_
+
+Picture:
+![_Borrelia burgdorferi_.](C:/Users/evain/OneDrive - Queen's University/university/BIOL 432/Week 6/Rentrez/bacteria.jpg)
+
+
+[Link to Wikipedia](https://en.wikipedia.org/wiki/Borrelia_burgdorferi) 
+
+Part II
+
+Write reproducible R code to search for the closest matching sequence on Genbank and generate an alignment to confirm the degree of similarity. Determine if it is human or another organism. Write a report in R Markdown explaining to the clinician whether this is something to be concerned about, using graphics with text to explain your analysis. Remember to pay attention to formatting to make the report look professional.
+
+```{r}
+library(annotate)
+
+
+SeqBlast<-blastSequences("GCCTGATGGAGGGGGATAACTACTGGAAACGGTAGCTAATACCGCATGACCTCGCAAGAGCAAAGTGGGGGACCTTAGGGCCTCACGCCATCGGATGAACCCAGATGGGATTAGCTAGTAGGTGGGGTAATGGCTCACCTAGGCGACGAT
+CCCTAGCTGGTCTGAGAGGATGACCAGCCACACTGGAACTGAGACACGGT
+CCAGACTCCTACGGGAGGCAGCAGTGGGGAATATTGCACAATGGGCGCAA",timeout=40,as="data.frame")
+
+nrow(SeqBlast)
+head(SeqBlast)
+
+View(SeqBlast)
+```
+
+  It is not human, it is _Yersinia pestis_. 
+  This is definitely something to be concerned about. _Y. pestis_ is the bacteria responsible for the deadly plague. It is responsible for three historical pandemics. It is found in soil and can be transmitted to and amongst animals, and to and amongst humans. It is characterised by non-specific symtoms like fever and weakness and also characteristic enlarged lymph nodes or "buboes". If left untreated, the plague can become septicemic and likely fatal. 
+
+
+Reference:
+Barbieri, R., Signoli, M., Chevé, D., Costedoat, C., Tzortzis, S., Aboudharam, G., Raoult, D., & Drancourt, M. (2020). Yersinia pestis: The natural history of plague. Clinical Microbiology Reviews, 34(1), e00044-19. https://doi.org/10.1128/CMR.00044-19
+
+
+
+  The Hsp score is a measure of how strong the match between sequences is. As seen below, the Hsp scores are very high, meaning that the sample is very similar to most Y. pestis sequences.  
+
+```{r}
+SeqBlast$Hsp_score
+```
+  Additionally, when performing a BLAST search for the sequence isolated from the patient, the % identity indicates that the sequence from our patient is 100% similar to that of _Yersinia pestis_. This means that it is highly likely that this patient is infected with _Y. pestis_ and has the plague. 
+
+
+![_Screenshot of the first 10 results from a BLAST search showing the percent identity (100%) of known sequences of Y. pestis to the patient sample_.](C:/Users/evain/OneDrive - Queen's University/university/BIOL 432/Week 6/Rentrez/BLAST.jpg)
